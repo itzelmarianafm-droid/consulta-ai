@@ -62,9 +62,11 @@ function NavIcon({ name }: { name: string }) {
 interface SidebarProps {
   activeView: string;
   onNavigate: (view: string) => void;
+  isSuperAdmin?: boolean;
+  onLogout?: () => void;
 }
 
-export default function Sidebar({ activeView, onNavigate }: SidebarProps) {
+export default function Sidebar({ activeView, onNavigate, isSuperAdmin, onLogout }: SidebarProps) {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [clinic, setClinic] = useState<{ name: string; plan: string } | null>(null);
 
@@ -147,15 +149,43 @@ export default function Sidebar({ activeView, onNavigate }: SidebarProps) {
           </nav>
         ))}
 
+        {/* Admin button (super admin only) */}
+        {isSuperAdmin && (
+          <nav className="mb-4">
+            <div className="text-[9.5px] tracking-[0.2em] uppercase text-paper/[0.42] px-3 mb-1.5 font-medium">
+              Administración
+            </div>
+            <button
+              className={`w-full flex items-center gap-3 px-3 py-2 rounded-md text-[13px] text-left relative transition-colors
+                ${activeView === 'Admin' ? 'bg-paper/[0.08] text-paper font-medium' : 'text-paper/70 hover:bg-paper/[0.05] hover:text-paper'}`}
+              onClick={() => { onNavigate('Admin'); setMobileOpen(false); }}
+            >
+              {activeView === 'Admin' && <span className="absolute left-[-20px] top-2 bottom-2 w-0.5 bg-accent rounded-r" />}
+              <span className="opacity-75 shrink-0"><NavIcon name="grid" /></span>
+              Panel Admin
+            </button>
+          </nav>
+        )}
+
         {/* Footer */}
-        <div className="mt-auto pt-4 border-t border-paper/[0.08] flex items-center gap-3">
-          <div className="w-[34px] h-[34px] rounded-full bg-gradient-to-br from-gold to-accent grid place-items-center font-serif font-medium text-paper text-[13px] shrink-0">
-            {clinic?.name ? clinic.name.slice(0, 2).toUpperCase() : '..'}
+        <div className="mt-auto pt-4 border-t border-paper/[0.08]">
+          <div className="flex items-center gap-3 mb-3">
+            <div className="w-[34px] h-[34px] rounded-full bg-gradient-to-br from-gold to-accent grid place-items-center font-serif font-medium text-paper text-[13px] shrink-0">
+              {clinic?.name ? clinic.name.slice(0, 2).toUpperCase() : '..'}
+            </div>
+            <div>
+              <div className="text-[12.5px] font-medium text-paper">{clinic?.name || 'Cargando...'}</div>
+              <div className="text-[10.5px] text-paper/50 mt-0.5">Plan {clinic?.plan || '...'} · MX</div>
+            </div>
           </div>
-          <div>
-            <div className="text-[12.5px] font-medium text-paper">{clinic?.name || 'Cargando...'}</div>
-            <div className="text-[10.5px] text-paper/50 mt-0.5">Plan {clinic?.plan || '...'} · MX</div>
-          </div>
+          {onLogout && (
+            <button
+              className="w-full text-left px-3 py-2 text-[12px] text-paper/50 hover:text-paper transition-colors rounded-md hover:bg-paper/[0.05]"
+              onClick={onLogout}
+            >
+              Cerrar sesión
+            </button>
+          )}
         </div>
       </aside>
     </>
