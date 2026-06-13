@@ -15,6 +15,7 @@ import PaypalConfig from './PaypalConfig';
 import TransferConfig from './TransferConfig';
 import FormSubmissions from './FormSubmissions';
 import CalendarConfig from './CalendarConfig';
+import KnowledgeBase from './KnowledgeBase';
 import AdminPanel from './AdminPanel';
 
 interface AuthState {
@@ -103,6 +104,7 @@ export default function Dashboard() {
         {view === 'Transferencias' && <TransferConfig />}
         {view === 'Formularios' && <FormSubmissions />}
         {view === 'Calendario' && <CalendarConfig />}
+        {view === 'Base de conocimiento' && <KnowledgeBase />}
         {view === 'Admin' && auth?.is_super_admin && <AdminPanel />}
       </main>
     </div>

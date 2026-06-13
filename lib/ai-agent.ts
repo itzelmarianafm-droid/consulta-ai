@@ -1,8 +1,5 @@
-// =====================================================================
-// AI Agent — Claude-powered conversational agent for clinics
-// =====================================================================
-
 import Anthropic from '@anthropic-ai/sdk';
+import { createServerClient } from './supabase/server';
 import type { AgentConfig, AgentResponse, AgentStage, Message } from './types';
 
 const anthropic = new Anthropic();
@@ -52,6 +49,46 @@ Avanza a "recuperacion" solo si: el paciente deja de responder o pide tiempo.`,
 Si responde con interés, regresa a "cierre".`,
 };
 
+async function getKnowledgeBase(clinicId: string): Promise<string> {
+  const db = createServerClient();
+  const { data } = await db
+    .from('knowledge_base')
+    .select('category, title, content')
+    .eq('clinic_id', clinicId)
+    .order('category')
+    .order('sort_order');
+
+  if (!data || data.length === 0) return '';
+
+  const categoryLabels: Record<string, string> = {
+    negocio: 'SOBRE EL NEGOCIO',
+    doctor: 'SOBRE EL DOCTOR/A',
+    servicios: 'SERVICIOS Y PRECIOS',
+    politicas: 'POLÍTICAS',
+    faqs: 'PREGUNTAS FRECUENTES',
+    promociones: 'PROMOCIONES ACTUALES',
+    otro: 'INFORMACIÓN ADICIONAL',
+  };
+
+  const grouped: Record<string, typeof data> = {};
+  for (const entry of data) {
+    if (!grouped[entry.category]) grouped[entry.category] = [];
+    grouped[entry.category].push(entry);
+  }
+
+  let kb = '\n--- BASE DE CONOCIMIENTO ---\nUsa esta información para responder preguntas. NUNCA inventes datos que no estén aquí.\n\n';
+
+  for (const [category, entries] of Object.entries(grouped)) {
+    kb += `[${categoryLabels[category] || category.toUpperCase()}]\n`;
+    for (const entry of entries) {
+      kb += `• ${entry.title}: ${entry.content}\n`;
+    }
+    kb += '\n';
+  }
+
+  return kb;
+}
+
 export async function generateResponse(
   config: AgentConfig,
   messages: Message[],
@@ -75,9 +112,12 @@ export async function generateResponse(
     })
     .join('\n');
 
+  const knowledgeBase = await getKnowledgeBase(config.clinic_id);
+
   const systemPrompt = `${config.persona_prompt}
 
 ${servicesStr}
+${knowledgeBase}
 
 --- ETAPA ACTUAL: ${currentStage.toUpperCase()} ---
 ${stageInstructions}
@@ -96,11 +136,12 @@ Responde SOLO con un JSON válido con esta estructura:
 }
 
 IMPORTANTE:
-- Responde SIEMPRE en español mexicano, tutea
+- Responde SIEMPRE en español, tutea
 - No uses emojis excesivos (máximo 1 por mensaje)
 - Sé concisa pero cálida
-- Nunca inventes información médica falsa
-- Si no sabes algo, di que lo consultarás con la doctora`;
+- Usa SOLO la información de la base de conocimiento para datos específicos (precios, horarios, políticas)
+- Si no tienes la información en tu base de conocimiento, di que lo consultarás con el doctor/a
+- NUNCA inventes precios, horarios ni información médica`;
 
   const conversationHistory = messages.slice(-20).map((m) => ({
     role: m.role as 'user' | 'assistant',
@@ -117,13 +158,12 @@ IMPORTANTE:
   const text = response.content[0].type === 'text' ? response.content[0].text : '';
 
   try {
-    // Try to parse as JSON
     const jsonMatch = text.match(/\{[\s\S]*\}/);
     if (jsonMatch) {
       return JSON.parse(jsonMatch[0]) as AgentResponse;
     }
   } catch {
-    // If JSON parsing fails, return the text as-is
+    // fallthrough
   }
 
   return { message: text };

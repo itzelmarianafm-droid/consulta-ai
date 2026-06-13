@@ -16,8 +16,8 @@ const NAV_GROUPS = [
     label: 'Inteligencia',
     items: [
       { name: 'Agente IA', icon: 'clock' },
+      { name: 'Base de conocimiento', icon: 'doc' },
       { name: 'Métricas', icon: 'chart' },
-      { name: 'Plantillas', icon: 'doc' },
       { name: 'Formularios', icon: 'list' },
       { name: 'Calendario', icon: 'calendar' },
     ],
