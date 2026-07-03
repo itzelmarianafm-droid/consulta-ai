@@ -19,6 +19,7 @@ const NAV_GROUPS = [
       { name: 'Base de conocimiento', icon: 'doc' },
       { name: 'Métricas', icon: 'chart' },
       { name: 'Formularios', icon: 'list' },
+      { name: 'Seguimiento', icon: 'user' },
       { name: 'Calendario', icon: 'calendar' },
     ],
   },
