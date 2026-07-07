@@ -250,6 +250,36 @@ export default function AdminPanel() {
                       </select>
                     </div>
                   </div>
+                  {/* Modules */}
+                  <div>
+                    <label className="block text-[10px] text-ink-soft font-semibold mb-2">Módulos</label>
+                    <div className="flex gap-3 flex-wrap">
+                      {[
+                        { key: 'email', label: 'Email Marketing' },
+                        { key: 'whatsapp', label: 'WhatsApp' },
+                      ].map(mod => {
+                        const modules = (c as unknown as Record<string, unknown>).modules as Record<string, boolean> | undefined;
+                        const enabled = modules?.[mod.key] ?? false;
+                        return (
+                          <button
+                            key={mod.key}
+                            className={`px-3 py-1.5 text-[11px] font-semibold rounded-md transition-colors ${enabled ? 'bg-accent text-paper' : 'border border-line text-ink-soft hover:text-ink'}`}
+                            onClick={async () => {
+                              const newModules = { ...(modules || {}), [mod.key]: !enabled };
+                              await fetch('/api/admin/modules', {
+                                method: 'PATCH',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify({ clinic_id: c.id, modules: newModules }),
+                              });
+                              loadClinics();
+                            }}
+                          >
+                            {mod.label}: {enabled ? 'ON' : 'OFF'}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
                   <div className="text-[10px] text-ink-soft font-mono">ID: {c.id}</div>
                 </div>
               )}

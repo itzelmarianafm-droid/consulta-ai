@@ -20,6 +20,7 @@ const NAV_GROUPS = [
       { name: 'Métricas', icon: 'chart' },
       { name: 'Formularios', icon: 'list' },
       { name: 'Seguimiento', icon: 'user' },
+      { name: 'Email Marketing', icon: 'doc' },
       { name: 'Calendario', icon: 'calendar' },
     ],
   },
