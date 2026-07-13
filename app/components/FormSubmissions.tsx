@@ -42,6 +42,41 @@ export default function FormSubmissions() {
 
   const filtered = filter === 'all' ? submissions : submissions.filter(s => s.status === filter);
 
+  const downloadExcel = useCallback(() => {
+    if (submissions.length === 0) return;
+
+    const allKeys = new Set<string>();
+    submissions.forEach(s => Object.keys(s.data).forEach(k => allKeys.add(k)));
+    const dataKeys = Array.from(allKeys);
+
+    const headers = ['Fecha', 'Nombre', 'Email', 'WhatsApp', 'Ciudad', 'Status', 'UTM Source', 'UTM Campaign', ...dataKeys.filter(k => !['nombre', 'email', 'whatsapp', 'ciudad'].includes(k))];
+
+    const rows = submissions.map(s => [
+      new Date(s.created_at).toLocaleString('es-MX'),
+      s.data.nombre || '',
+      s.data.email || '',
+      s.data.whatsapp || '',
+      s.data.ciudad || '',
+      STATUS_LABELS[s.status]?.label || s.status,
+      s.utm_source || '',
+      s.utm_campaign || '',
+      ...dataKeys.filter(k => !['nombre', 'email', 'whatsapp', 'ciudad'].includes(k)).map(k => s.data[k] || ''),
+    ]);
+
+    const csvContent = [headers, ...rows]
+      .map(row => row.map(cell => `"${String(cell).replace(/"/g, '""')}"`).join(','))
+      .join('\n');
+
+    const BOM = '﻿';
+    const blob = new Blob([BOM + csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `formularios_${new Date().toISOString().slice(0, 10)}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+  }, [submissions]);
+
   return (
     <div className="space-y-6">
       {/* Header + Filter */}
@@ -49,9 +84,16 @@ export default function FormSubmissions() {
         <div className="px-5 pt-4 pb-3 flex justify-between items-center border-b border-line flex-wrap gap-3">
           <div>
             <div className="font-serif text-[22px] font-medium tracking-tight">Respuestas de formulario</div>
-            <div className="text-[11.5px] text-ink-soft mt-0.5">Diagnósticos recibidos desde la landing page</div>
+            <div className="text-[11.5px] text-ink-soft mt-0.5">Diagnósticos recibidos desde la landing page · {submissions.length} registro{submissions.length !== 1 ? 's' : ''}</div>
           </div>
-          <div className="flex gap-1.5">
+          <div className="flex gap-1.5 items-center">
+            <button
+              className="px-3 py-1.5 border border-line-strong rounded-md text-[11px] font-medium text-ink-soft hover:text-ink transition-colors disabled:opacity-30"
+              onClick={downloadExcel}
+              disabled={submissions.length === 0}
+            >
+              Descargar Excel
+            </button>
             {['all', 'new', 'reviewed', 'contacted', 'booked'].map(f => (
               <button
                 key={f}
