@@ -10,6 +10,7 @@ const NAV_GROUPS = [
       { name: 'Pipeline', badge: '47', icon: 'list' },
       { name: 'Conversaciones', badge: '12', icon: 'chat' },
       { name: 'Agenda', icon: 'calendar' },
+      { name: 'WhatsApp', icon: 'chat' },
     ],
   },
   {

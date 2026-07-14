@@ -19,6 +19,7 @@ import KnowledgeBase from './KnowledgeBase';
 import Followups from './Followups';
 import EmailMarketing from './EmailMarketing';
 import AdminPanel from './AdminPanel';
+import WhatsAppConnect from './WhatsAppConnect';
 
 interface AuthState {
   authenticated: boolean;
@@ -109,6 +110,7 @@ export default function Dashboard() {
         {view === 'Email Marketing' && <EmailMarketing />}
         {view === 'Calendario' && <CalendarConfig />}
         {view === 'Base de conocimiento' && <KnowledgeBase />}
+        {view === 'WhatsApp' && <WhatsAppConnect />}
         {view === 'Admin' && auth?.is_super_admin && <AdminPanel />}
       </main>
     </div>
